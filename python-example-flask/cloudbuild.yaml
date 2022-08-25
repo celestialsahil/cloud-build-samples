@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+  # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,34 +30,49 @@ steps:
   # [START cloudbuild_python_image_yaml]
   # Docker Build
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 
-           'us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/myimage:${SHORT_SHA}', '.']
+    args: ['build', '-t', 'asia-south1-docker.pkg.dev/niveus-delivery-infra-mod-poc/a-repo/hello-app:$SHORT_SHA', '.']
+
+    # args: ['build', '-t', 
+    #        'us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/myimage:${SHORT_SHA}', '.']
   # [END cloudbuild_python_image_yaml]
 
   # [START cloudbuild_python_push_yaml]
   # Docker push to Google Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push',  'us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/myimage:${SHORT_SHA}']
+    args: ["push", "asia-south1-docker.pkg.dev/niveus-delivery-infra-mod-poc/a-repo/hello-app:$SHORT_SHA"]
+
+
+
+    # args: ['push',  'us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/myimage:${SHORT_SHA}']
   # [END cloudbuild_python_push_yaml]
-  
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - >
+    gcloud deploy releases create release-$BUILD_ID
+    --delivery-pipeline=hello-app
+    --region=us-central1
+    --source=./
+    --images=hello-app=asia-south1-docker.pkg.dev/niveus-delivery-infra-mod-poc/a-repo/hello-app:$SHORT_SHA  
   # [START cloudbuild_python_deploy_yaml]
   # Deploy to Cloud Run
-  - name: google/cloud-sdk
-    args: ['gcloud', 'run', 'deploy', 'helloworld-${SHORT_SHA}', 
-           '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/myimage:${SHORT_SHA}', 
-           '--region', 'us-central1', '--platform', 'managed', 
-           '--allow-unauthenticated']
+  # - name: google/cloud-sdk
+  #   args: ['gcloud', 'run', 'deploy', 'helloworld-${SHORT_SHA}', 
+  #          '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/myimage:${SHORT_SHA}', 
+  #          '--region', 'us-central1', '--platform', 'managed', 
+  #          '--allow-unauthenticated']
   # [END cloudbuild_python_deploy_yaml]
   
 # [START cloudbuild_python_logs_yaml]
 # Save test logs to Google Cloud Storage
-artifacts:
-  objects:
-    location: gs://${_BUCKET_NAME}/
-    paths:
-      - ${SHORT_SHA}_test_log.xml
+# artifacts:
+#   objects:
+#     location: gs://${_BUCKET_NAME}/
+#     paths:
+#       - ${SHORT_SHA}_test_log.xml
 # [END cloudbuild_python_logs_yaml]
 # Store images in Google Artifact Registry 
-images:
-  - us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/myimage:${SHORT_SHA}
+# images:
+#   - us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/myimage:${SHORT_SHA}
 # [END cloudbuild_python_yaml]
